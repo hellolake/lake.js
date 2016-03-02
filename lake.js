@@ -380,7 +380,13 @@
         },
         del:function(target,event,fn){
             var __this = this, fns, index;
-            if(typeof target == "string" && !!document.querySelector(target)){
+            if(!target){
+                lake.each(__this.event,function(e,key){
+                    lake.deaf(__this.base,key,__this.main);
+                    delete __this.event[key];
+                    delete __this.target[key];
+                });
+            }else if(typeof target == "string" && !!document.querySelector(target)){
                 if(typeof event == "string" && typeof fn == "function"){
                     fns = __this.target[event][target];
                     index = fns.indexOf(fn);
@@ -398,7 +404,7 @@
                     index = fns.indexOf(event);
                     index > -1 && fns.splice(index,1);
                 }else if(!event){
-                    delete __this.event[target];
+                    __this.event[target].splice(0)
                 }
             }else{
                 console.error("arguments must be like: (target,event,fn) or (target,event) or (target) to delete child event. (event,fn) or (event) to delete self event.")
