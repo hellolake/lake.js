@@ -385,7 +385,7 @@
                     lake.deaf(__this.base,key,__this.main);
                     delete __this.event[key];
                     delete __this.target[key];
-                });
+                })
             }else if(typeof target == "string" && !!document.querySelector(target)){
                 if(typeof event == "string" && typeof fn == "function"){
                     fns = __this.target[event][target];
