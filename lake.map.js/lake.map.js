@@ -1,16 +1,18 @@
 // Lake 20160304
 // https://github.com/hellolake/lake.js
 
+var bmap_ak = {
+	key:"5yG2Ep6NoV7OWUErStfE73El",		//Baidu Map API Key for test, not sure its stability. 测试用AK,不保证其稳定性.
+	ver:"2.0"							//Version of API. API版本
+};
+
 (function(){
 
     if(!window.lake) window.lake = {};
 
 	lake.map = function (fn,options) {
 		if(!this.map.ak){
-			this.map.ak = {
-				key:"5yG2Ep6NoV7OWUErStfE73El",		//Baidu Map API Key for test, not sure its stability. 测试用AK,不保证其稳定性.
-				ver:"2.0"							//Version of API. API版本
-			};
+			this.map.ak = bmap_ak
 		}
 		if(options){
 			for(var k in options){
@@ -187,7 +189,7 @@
 			zoom = location;
 			location = undefined;
 		}
-		if(Object.prototype.toString.call(location) === "[object Object]" && !location instanceof BMap.Point){
+		if(Object.prototype.toString.call(location) === "[object Object]" && !(location instanceof BMap.Point)){
 			options = location;
 			location = undefined;
 		}
@@ -485,10 +487,16 @@
 
 	//Convert element to BMap overlay
 	lake.map.overlay = function(obj,point,option){
-		var o, p, init, draw;
-		if(point && (point.oninit || point.ondraw)){
+		var o, p, init = null, draw = null, drag = false, selectable = false;
+		if(Object.prototype.toString.call(point) === "[object Object]" && !(point instanceof BMap.Point)){
 				option = point;
 				point = undefined;
+		}
+		if(option && option.drag === true){
+			drag = true
+		}
+		if(option && option.selectable === true){
+			selectable = true
 		}
 		if(option && typeof option.oninit == "function"){
 			init = option.oninit
@@ -513,18 +521,11 @@
 			return;
 		}
 		if(!this.overlay._overlay){
-			this.overlay._overlay = function(obj,point,oninit,ondraw){
-				BMap.Overlay.call(this);
+			this.overlay._overlay = function(obj,point,oninit,ondraw,drag,selectable){
 				this.obj = obj;
-				this._div = obj;
 				this.point = point;
-				this._point = point;
-				this.z = {
-
-					Xb: false,
-
-				};
-				this.selectable = false;
+				this.drag = drag;
+				this.selectable = selectable;
 				this.oninit = oninit;
 				this.ondraw = ondraw;
 			};
@@ -535,15 +536,17 @@
 				map.getPanes().labelPane.appendChild(this.obj);
 				//this.obj.style.zIndex = BMap.Overlay.getZIndex(this.point.lat);
 				this.obj.style.position = "absolute";
-				if(this.oninit)this.oninit.call(this,this);
+
 				var _this = this;
+
 				this.obj.addEventListener("click",function(e){if(_this.selectable===true){e.stopImmediatePropagation()}_this.dispatchEvent("click")});
 				this.obj.addEventListener("dblclick",function(e){if(_this.selectable===true){e.stopImmediatePropagation()}_this.dispatchEvent("dblclick")});
-				this.obj.addEventListener("rightclick",function(e){if(_this.selectable===true){e.stopImmediatePropagation()}_this.dispatchEvent("rightclick")});
 				this.obj.addEventListener("mousedown",function(e){if(_this.selectable===true){e.stopImmediatePropagation()}_this.dispatchEvent("mousedown")});
 				this.obj.addEventListener("mouseup",function(e){if(_this.selectable===true){e.stopImmediatePropagation()}_this.dispatchEvent("mouseup")});
 				this.obj.addEventListener("mouseout",function(e){if(_this.selectable===true){e.stopImmediatePropagation()}_this.dispatchEvent("mouseout")});
 				this.obj.addEventListener("mouseover",function(e){if(_this.selectable===true){e.stopImmediatePropagation()}_this.dispatchEvent("mouseover")});
+
+				if(this.oninit)this.oninit.call(this,this);
 				return this.obj;
 			};
 			this.overlay._overlay.prototype.draw = function(){
@@ -567,15 +570,10 @@
 			this.overlay._overlay.prototype.getObj = function(){
 				return this.obj
 			};
-			this.overlay._overlay.prototype.enableDragging = function(){
-				BMap.Marker.prototype.enableDragging.call(this);
-			};
-			this.overlay._overlay.prototype.disableDragging = function(){
-				BMap.Marker.prototype.disableDragging.call(this);
-			};
+
 
 		}
-		return new this.overlay._overlay(o,p,init,draw);
+		return new this.overlay._overlay(o,p,init,draw,drag,selectable);
 	};
 
 })();
