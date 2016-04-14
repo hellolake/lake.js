@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <title></title>
+    <script src="lake.js"></script>
+    <script src="lake.map.js"></script>
+    <style id="style" rel="stylesheet">
+    html,body{height:100%;margin:0;}
+    </style>
+</head>
+<body style="background: #f9f9f9;">
+    <a href="javascript:window.history.go(-1);" style="position: absolute;left: .5em;top: .5em;z-index: 999;font-size:14px;text-decoration:none;padding:.75em;background-color: rgba(255,255,255,.8);color: #000;border-radius:.5em;"><<</a>
+    <div class="map mapa" id="map1" style="height: 40%;width: 100%;"></div>
+    <section style="height:30%;position: relative;">
+        <div id="logs" style="height:38%;width: 100%;text-align: center;overflow: hidden;position: absolute;bottom:5px;left: 0;z-index:-1;font-size: 12px;-webkit-text-size-adjust:none"></div>
+        <div id="btns" style="padding-top: 1em;text-align: center;">
+            <input type="button" id="btn1" value="add random element">
+        </div>
+        <div id="openit" style="position: absolute;left:50%;top: 50%;background-color: rgba(255,255,255,.75);border: 1px solid #aaa;border-radius: .25em;padding:0 1em;-webkit-transform:translate(-50%,-50%);transform: translate(-50%,-50%);text-align: center;white-space:nowrap;">
+            <p style="font-size: .875em;">Open,and let me in!<br>让我进去！</p>
+        </div>
+    </section>
+
+    <div id="code" style="height:30%;width:100%;border-top: 1px solid #ddd;overflow: auto;background: #eee;color: #333;position: absolute;bottom: 0;left: 0;">
+        <pre style="padding-left:1em;">
+lake.map(function(){
+
+    var map1 = lake.map.new("#map1","深圳");
+
+    //转换目标元素为覆盖物 点击添加到地图 convert an overlay and click to map
+    var custom = lake.map.overlay("#openit");
+
+    openit.addEventListener("click",addoverlay);
+
+    function addoverlay(){
+        custom.setPosition(map1.getCenter());
+        map1.addOverlay(custom);
+        openit.removeEventListener("click",addoverlay);
+    }
+
+    //添加随机元素 add random element
+    btn1.onclick = function () {
+        var span = document.createElement("span");
+        span.style.cssText = "padding:.5em;background-color:rgb("+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+");border:.125em solid #fff;border-radius:50%;position;absolute;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);";
+        span.innerHTML = "Bingo!";
+        var p = new BMap.Point(114.06+Math.random()/64,22.54+Math.random()/64);
+        var overlay = lake.map.overlay(span,p);
+        map1.addOverlay(overlay);
+    };
+
+})
+        </pre>
+
+    </div>
+    <script>
+        lake.listen(window,"load",function(){
+            console.log(lake);
+
+            function log(){
+                cancelAnimationFrame(loging);
+                for(var i= 0,j=arguments.length;i<j;i++){
+                    logs.innerHTML += arguments[i] + "<br>"
+                }
+                loging();
+            }
+            function loging(){
+                logs.scrollTop++;
+                if(logs.scrollTop < logs.scrollHeight-logs.clientHeight-1) requestAnimationFrame(loging)
+            }
+
+            lake.map(function(){
+
+                var map1 = lake.map.new("#map1","深圳");
+
+                //转换目标元素为覆盖物 点击添加到地图 convert an overlay and click to map
+                var custom = lake.map.overlay("#openit");
+
+                openit.addEventListener("click",addoverlay);
+
+                function addoverlay(){
+                    custom.setPosition(map1.getCenter());
+                    map1.addOverlay(custom);
+                    openit.removeEventListener("click",addoverlay);
+                }
+
+                //添加随机元素 add random element
+                btn1.onclick = function () {
+                    var span = document.createElement("span");
+                    span.style.cssText = "padding:.5em;background-color:rgb("+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+","+Math.floor(Math.random()*255)+");border:.125em solid #fff;border-radius:50%;position;absolute;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);";
+                    span.innerHTML = "Bingo!";
+                    var p = new BMap.Point(114.06+Math.random()/64,22.54+Math.random()/64);
+                    var overlay = lake.map.overlay(span,p);
+                    map1.addOverlay(overlay);
+                };
+
+            })
+        })
+    </script>
+</body>
+
+</html>

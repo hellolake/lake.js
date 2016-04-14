@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <title></title>
+    <script src="lake.js"></script>
+    <script src="lake.map.js"></script>
+    <style id="style" rel="stylesheet">
+    html,body{height:100%;margin:0;}
+    </style>
+</head>
+<body style="background: #f9f9f9;">
+    <a href="javascript:window.history.go(-1);" style="position: absolute;left: .5em;top: .5em;z-index: 999;font-size:14px;text-decoration:none;padding:.75em;background-color: rgba(255,255,255,.8);color: #000;border-radius:.5em;"><<</a>
+    <div class="map mapa" id="map1" style="height: 40%;width: 100%;"></div>
+    <section style="height:30%;position: relative;">
+        <div id="logs" style="height:38%;width: 100%;text-align: center;overflow: hidden;position: absolute;bottom:5px;left: 0;z-index:-1;font-size: 12px;-webkit-text-size-adjust:none"></div>
+        <div id="btns" style="padding-top: 1em;text-align: center;">
+            <input type="button" id="btn1" value="start gps">
+            <input type="button" id="btn2" value="stop gps">
+            <input type="button" id="btn3" value="show position">
+            <input type="button" id="btn4" value="hide position">
+            <input type="button" id="btn5" value="show accuracy">
+            <input type="button" id="btn6" value="hide accuracy">
+            <input type="button" id="btn7" value="replace marker">
+            <input type="button" id="btn8" value="replace circle">
+        </div>
+    </section>
+
+    <div id="code" style="height:30%;width:100%;border-top: 1px solid #ddd;overflow: auto;background: #eee;color: #333;position: absolute;bottom: 0;left: 0;">
+        <pre style="padding-left:1em;">
+lake.map(function(){
+
+    var map1 = lake.map.new("#map1","深圳",16);
+    var top_left_control = new BMap.NavigationControl({anchor: BMAP_ANCHOR_BOTTOM_RIGHT});
+    map1.addControl(top_left_control);
+
+    btn3.onclick = function(){
+        map1.user.marker.show();
+        map1.setCenter(lake.map.location);
+    };
+    btn4.onclick = function(){
+        map1.user.marker.hide();
+    };
+    btn5.onclick = function(){
+        map1.user.circle.show();
+        map1.setCenter(lake.map.location);
+    };
+    btn6.onclick = function(){
+        map1.user.circle.hide();
+    };
+
+    //设置用户位置标志 create an overlay and set to user position marker
+    var span = document.createElement("span");
+    span.style.cssText = "padding:.5em;background-color:#fff;border:1px solid #f50;border-radius:50%;position;absolute;z-index:909;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);";
+    span.innerHTML = "YOU";
+
+    //初始化和设置位置更新时的回调函数 Initialize and set position update callback
+    function init_poz(){
+        this.update = function(type,location,accuracy){
+            if(type == "located"){
+                this.setPosition(location)
+            }
+        };
+        if(lake.map.location){
+            this.setPosition(lake.map.location);
+        }
+    }
+
+    var poz = lake.map.overlay(span,{oninit:init_poz});
+
+    btn7.onclick = function(){
+        map1.user(poz);
+    };
+
+    //设置用户位置精度标志 create an overlay and set to user accuracy circle
+    var span2 = document.createElement("span");
+    span2.style.cssText = "background-color:rgba(255,0,0,.125);border-radius:50%;position;absolute;z-index:808;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);";
+
+    //初始化和设置位置更新时的回调函数 Initialize and set position update callback
+    function init_acc(){
+        this.update = function(type,location,accuracy){
+            if(type == "located"){
+                this.setPosition(location)
+            }
+            this.setAccuracy(accuracy)
+        };
+        this.setAccuracy = function(accuracy){
+            //把padding作为半径 use padding as radius
+            this.obj.style.padding = accuracy/this.map.resolution + "px"
+        };
+        if(lake.map.location){
+            this.setPosition(lake.map.location);
+            this.setAccuracy(lake.map.accuracy);
+        }
+    }
+
+    var acc = lake.map.overlay(span2,{oninit:init_acc});
+
+    btn8.onclick = function(){
+        map1.user(null,acc);
+    };
+
+    //initialize gps
+    lake.map.gps(success1,error1);
+
+    //callback
+    function success1(result){
+        console.log(result);
+        log("东经E:"+result.point.lng+" 北纬N:"+result.point.lat);
+        log("精度A:"+result.accuracy);
+    }
+    function error1(err){
+        console.log(err);
+        log("error:"+err);
+    }
+    function center(p){
+        map1.setCenter(p);
+        lake.map.gps.del("success",center);
+    }
+
+    //event
+    btn1.onclick = function(){
+        log("开始定位 Starting GPS...");
+        if(!/Mobile/.test(navigator.userAgent)){
+            log("PC端误差较大 Low accuracy on PC");
+        }
+        lake.map.gps.add("success",center);
+        lake.map.gps.run();
+    };
+
+    btn2.onclick = function(){
+        lake.map.gps.stop();
+    };
+
+})
+        </pre>
+
+    </div>
+    <script>
+        lake.listen(window,"load",function(){
+            console.log(lake);
+
+            function log(){
+                cancelAnimationFrame(loging);
+                for(var i= 0,j=arguments.length;i<j;i++){
+                    logs.innerHTML += arguments[i] + "<br>"
+                }
+                loging();
+            }
+            function loging(){
+                logs.scrollTop++;
+                if(logs.scrollTop < logs.scrollHeight-logs.clientHeight-1) requestAnimationFrame(loging)
+            }
+
+            lake.map(function(){
+
+                var map1 = lake.map.new("#map1","深圳",16);
+
+                //add zoom tool
+                var top_left_control = new BMap.NavigationControl({anchor: BMAP_ANCHOR_BOTTOM_RIGHT});
+                map1.addControl(top_left_control);
+
+                btn3.onclick = function(){
+                    map1.user.marker.show();
+                    map1.setCenter(lake.map.location);
+//                    poz.enableDragging();
+                };
+                btn4.onclick = function(){
+                    map1.user.marker.hide();
+                };
+                btn5.onclick = function(){
+                    map1.user.circle.show();
+                    map1.setCenter(lake.map.location);
+                };
+                btn6.onclick = function(){
+                    map1.user.circle.hide();
+                };
+
+                //创建用户位置标识的HTML元素 create HTML element of user position marker
+                var span = document.createElement("span");
+                span.style.cssText = "padding:.5em;background-color:#fff;border:1px solid #f50;border-radius:50%;position;absolute;z-index:909;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);";
+                span.innerHTML = "YOU";
+
+                //初始化和设置位置更新时的回调函数 Initialize and set position update callback
+                function init_poz(){
+                    this.update = function(type,location,accuracy){
+                        if(type == "located"){
+                            this.setPosition(location)
+                        }
+                    };
+                    if(lake.map.location){
+                        this.setPosition(lake.map.location);
+                    }
+                }
+
+                //创建覆盖物 create overlay
+                var poz = lake.map.overlay(span,{oninit:init_poz});
+                poz.enableDragging();
+                poz.setPosition(new BMap.Point(114.07,22.55));
+                var m = new BMap.Marker(new BMap.Point(114.06,22.55));
+                map1.addOverlay(poz);
+                map1.addOverlay(m);
+                console.log("ontouchstart" in window);
+                poz.addEventListener("dblclick",function(e) {
+                    log(e.type)
+                });
+                m.addEventListener("rightclick",function(e) {
+                    log(e.type)
+                });
+                m.enableDragging();
+
+                btn7.onclick = function(){
+                    map1.user(poz);
+                };
+
+                //创建用户位置精度的HTML元素 create HTML element of user accuracy circle
+                var span2 = document.createElement("span");
+                span2.style.cssText = "background-color:rgba(255,0,0,.125);border-radius:50%;position;absolute;z-index:808;-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%);";
+
+                //初始化和设置位置更新时的回调函数 Initialize and set position update callback
+                function init_acc(){
+                    this.update = function(type,location,accuracy){
+                        if(type == "located"){
+                            this.setPosition(location)
+                        }
+                        this.setAccuracy(accuracy)
+                    };
+                    this.setAccuracy = function(accuracy){
+                        //把padding作为半径 use padding as radius
+                        this.obj.style.padding = accuracy/this.map.resolution + "px"
+                    };
+                    if(lake.map.location){
+                        this.setPosition(lake.map.location);
+                        this.setAccuracy(lake.map.accuracy);
+                    }
+                }
+
+                //创建覆盖物 create overlay
+                var acc = lake.map.overlay(span2,{oninit:init_acc});
+
+                btn8.onclick = function(){
+                    map1.user(null,acc);
+                };
+
+                //initialize gps
+                lake.map.gps(success1,error1);
+
+                //callback
+                function success1(result){
+                    console.log(result);
+                    log("东经E:"+result.point.lng+" 北纬N:"+result.point.lat);
+                    log("精度A:"+result.accuracy);
+                }
+                function error1(err){
+                    console.log(err);
+                    log("error:"+err);
+                }
+                function center(p){
+                    map1.setCenter(p);
+                    lake.map.gps.del("success",center);
+                }
+
+                //event
+                btn1.onclick = function(){
+                    log("开始定位 Starting GPS...");
+                    if(!/Mobile/.test(navigator.userAgent)){
+                        log("PC端误差较大 Low accuracy on PC");
+                    }
+                    lake.map.gps.add("success",center);
+                    lake.map.gps.run();
+                };
+
+                btn2.onclick = function(){
+                    lake.map.gps.stop();
+                };
+
+            })
+        })
+    </script>
+</body>
+
+</html>
