@@ -1,4 +1,5 @@
-// Lake 20160116
+// Lake 20160323
+// https://github.com/hellolake/lake.js
 
 (function(){
 
@@ -23,29 +24,29 @@
                 this.each(obj,function(ele){ele.nodeType==1&&arr.push(ele)});
                 objs = arr;
             }else{
-                console.error("'obj':"+obj+" can not be selected.");
+                console.error("Argument:"+obj+" can not be selected.");
                 return null;
             }
             if(objs.length==1){
                 return objs[0]
             }else if(objs.length>1){
-                return objs
+                return objs;
             }else{
-                console.error("No selectable element in 'obj':"+obj+".");
+                console.error("No selectable element in: "+obj+".");
                 return null;
             }
         }
     };
     lake.each = function(obj,fn,reverse){
         if(obj.length){
-            var i;
+            var i,j;
             if(reverse === true) {
                 i = obj.length;
                 while(i--){
                     fn(obj[i], i)
                 }
             }else{
-                for (i = 0; i < obj.length; i++) {
+                for (i = 0, j = obj.length; i < j; i++) {
                     fn(obj[i], i)
                 }
             }
@@ -55,7 +56,7 @@
                     fn(obj[k],k)
                 }
             }
-        }else{console.error("'obj' can not be traversed.")}
+        }else{console.error("Arg[0]:"+obj+" can not be traversed.")}
     };
     lake.offset = function(obj,target){
         var o = this.select(obj),
@@ -72,10 +73,10 @@
                 var t_bcr = t.getBoundingClientRect();
                 return {top: t_bcr.top-o_bcr.top, left: t_bcr.left-o_bcr.left};
             }else{
-                console.error("'target':"+target+" is not an element.")
+                console.error("Arg[1]:"+target+" is not an element.")
             }
         }else{
-            console.error("'obj':"+obj+"is not an element.")
+            console.error("Arg[0]:"+obj+"is not an element.")
         }
     };
     lake.css = function(obj,css,internal){
@@ -94,7 +95,7 @@
                 }
                 this.style.innerHTML += obj + "{" + css + "}"
             }else{
-                console.error("'obj':"+obj+" must be a string.")
+                console.error("Arg[0]:obj must be a selector string when enable internal.")
             }
         }
     };
@@ -136,7 +137,7 @@
                                 }
                             }else if(_target.length){
                                 result = false;
-                                for(var k=0;k<_target.length;k++) {
+                                for(var k=0,n=_target.length;k<n;k++) {
                                     if (test(_target[k], str4)) {
                                         _target = _target[k];
                                         result = true;
@@ -172,7 +173,7 @@
             });
             return output;
         }else{
-            console.error("'selector' must be a selector string.")
+            console.error("Arg[1]:selector must be a selector string.")
         }
     };
     lake.listen = function(target,event,fn,capture){
@@ -212,55 +213,89 @@
 //      name:[string]
 //      password:[string]
 //      header:{key1:value1,key2:value2...}
+//      mime:[string]
 //      }
     lake.ajax = function(method,url,options){
-
-        var xhr = new XMLHttpRequest(),
-            action = method.toUpperCase(),
-            data = options.data?options.data:null,
-            base = data===null?xhr:xhr.upload,
-            asyn = options.asyn?options.asyn:true,
-            name="",password="";
-
-        if(options.onload){
-            base.addEventListener('load',function(event){
-                options.onload(xhr,event)
-            },false)
-        }
-        if(options.onprogress){
-            base.addEventListener('progress',function(event){
-                options.onprogress(xhr,event)
-            },false)
-        }
-        if(options.onabort){
-            base.addEventListener('abort',function(event){
-                options.onabort(xhr,event)
-            },false)
-        }
-        if(options.onerror){
-            base.addEventListener('error',function(event){
-                options.onabort(xhr,event)
-            },false)
-        }
-        if(options.ontimeout){
-            base.addEventListener('timeout',function(event){
-                options.ontimeout(xhr,event)
-            },false)
-        }
-
-        if(options.type){xhr.responseType=options.type}
-        if(options.credentials){xhr.withCredentials=options.credentials}
-        if(options.name&&options.password){name=options.name;password=options.password;}
-
-        xhr.open(action,url,asyn,name,password);
-        xhr.timeout = options.timeout?options.timeout:5000;
-        if(options.header){
-            for (var k in options.header){
-                xhr.setRequestHeader(k,options.header[k])
+        var pars = {
+            type:'',
+            data:null,
+            onloadstart:null,
+            onload:null,
+            onloadend:null,
+            onprogress:null,
+            onabort:null,
+            onerror:null,
+            timeout:5000,
+            ontimeout:null,
+            asyn:true,
+            credentials:false,
+            name:'',
+            password:'',
+            header:null,
+            mime:null
+        };
+        if (options){
+            for(var k in options){
+                pars[k] = options[k]
             }
         }
 
-        xhr.send(data);
+        var xhr = new XMLHttpRequest(),
+            action = method.toUpperCase(),
+            base = !pars.data ? xhr : xhr.upload;
+
+        if(pars.onloadstart){
+            base.addEventListener('loadstart',function(event){
+                pars.onloadstart(xhr,event)
+            },false)
+        }
+        if(pars.onload){
+            base.addEventListener('load',function(event){
+                pars.onload(xhr,event)
+            },false)
+        }
+        if(pars.onloadend){
+            base.addEventListener('loadend',function(event){
+                pars.onloadend(xhr,event)
+            },false)
+        }
+        if(pars.onprogress){
+            base.addEventListener('progress',function(event){
+                pars.onprogress(xhr,event)
+            },false)
+        }
+        if(pars.onabort){
+            base.addEventListener('abort',function(event){
+                pars.onabort(xhr,event)
+            },false)
+        }
+        if(pars.onerror){
+            base.addEventListener('error',function(event){
+                pars.onabort(xhr,event)
+            },false)
+        }
+        if(pars.ontimeout){
+            base.addEventListener('timeout',function(event){
+                pars.ontimeout(xhr,event)
+            },false)
+        }
+
+        xhr.responseType = pars.type;
+        xhr.withCredentials = pars.credentials;
+
+        xhr.open(action,url,pars.asyn,pars.name,pars.password);
+        xhr.timeout = pars.timeout;
+
+        if(pars.header){
+            for (var j in pars.header){
+                xhr.setRequestHeader(j,pars.header[j])
+            }
+        }
+        if(pars.mime){
+            xhr.overrideMimeType(pars.mime)
+        }
+
+        xhr.send(pars.data);
 
         return xhr;
     };
@@ -277,7 +312,7 @@
             characterData: false,
             subtree: true,
             attributeOldValue: false,
-            characterDataOldValue: false /*,attributeFilter:null*/
+            characterDataOldValue: false /*,attributeFilter:undefined*/
         };
         var __this = this;
         if (!__this.objs) __this.objs = [];
@@ -348,15 +383,15 @@
         add:function(target,event,fn,capture){
             if(typeof target == "string" && typeof event == "string" && typeof fn == "function"){
                 if(!document.querySelector(target)){
-                    console.error("'target':"+target+" must be an available selector string.");
-                    return false;
+                    console.error("Arg[0]:target must be an available selector string.");
+                    return;
                 }
                 target = target.trim().replace(/\s+/g," ").replace(/\s*([>+~])\s*/g,"$1");
             }else if(typeof target == "string" && typeof event == "function"){
                 capture = fn; fn = event; event = target;target = undefined
             }else{
-                console.error("arguments must be like : (target,event,fn[,capture]) or (event,fn[,capture])");
-                return false;
+                console.error("Arguments must be like : (target,event,fn[,capture]) or (event,fn[,capture])");
+                return;
             }
             var __this = this;
             if (!__this.event[event]){
@@ -405,7 +440,7 @@
                     __this.event[target].splice(0)
                 }
             }else{
-                console.error("arguments must be like: (target,event,fn) or (target,event) or (target) to delete child event. (event,fn) or (event) to delete self event.")
+                console.error("Arguments must be like: (target,event,fn) or (target,event) or (target) to delete child event. (event,fn) or (event) to delete self event.")
             }
         }
     };
