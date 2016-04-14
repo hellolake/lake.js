@@ -164,7 +164,6 @@ lake.map(function(){
                 btn3.onclick = function(){
                     map1.user.marker.show();
                     map1.setCenter(lake.map.location);
-//                    poz.enableDragging();
                 };
                 btn4.onclick = function(){
                     map1.user.marker.hide();
@@ -196,19 +195,6 @@ lake.map(function(){
 
                 //创建覆盖物 create overlay
                 var poz = lake.map.overlay(span,{oninit:init_poz});
-                poz.enableDragging();
-                poz.setPosition(new BMap.Point(114.07,22.55));
-                var m = new BMap.Marker(new BMap.Point(114.06,22.55));
-                map1.addOverlay(poz);
-                map1.addOverlay(m);
-                console.log("ontouchstart" in window);
-                poz.addEventListener("dblclick",function(e) {
-                    log(e.type)
-                });
-                m.addEventListener("rightclick",function(e) {
-                    log(e.type)
-                });
-                m.enableDragging();
 
                 btn7.onclick = function(){
                     map1.user(poz);
