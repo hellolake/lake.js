@@ -1,4 +1,5 @@
 // Lake 20160323
+// https://hellolake.duapp.com
 // https://github.com/hellolake/lake.js
 
 (function(){
@@ -62,16 +63,15 @@
         var o = this.select(obj),
             t = target?this.select(target):undefined;
         if(o.nodeType == 1){
-            var o_bcr = o.getBoundingClientRect();
+            var t_bcr,o_bcr = o.getBoundingClientRect();
             if (!t || t.nodeType==9) {
-                var o_doc_top = o.ownerDocument.body.scrollTop,
-                    o_doc_left = o.ownerDocument.body.scrollLeft;
-                return {top: o_bcr.top + o_doc_top, left: o_bcr.left + o_doc_left};
+                t_bcr = o.ownerDocument.documentElement.getBoundingClientRect();
+                return {top: o_bcr.top-t_bcr.top, left: o_bcr.left-t_bcr.left};
             }else if(t === window){
                 return {top: o_bcr.top, left: o_bcr.left}
             }else if (t.nodeType == 1) {
-                var t_bcr = t.getBoundingClientRect();
-                return {top: t_bcr.top-o_bcr.top, left: t_bcr.left-o_bcr.left};
+                t_bcr = t.getBoundingClientRect();
+                return {top: o_bcr.top-t_bcr.top, left: o_bcr.left-t_bcr.left};
             }else{
                 console.error("Arg[1]:"+target+" is not an element.")
             }
