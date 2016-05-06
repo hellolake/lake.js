@@ -1,4 +1,4 @@
-// Lake 20160323
+// Lake 20160507
 // https://hellolake.duapp.com
 // https://github.com/hellolake/lake.js
 
@@ -7,7 +7,7 @@
     if(!window.lake) window.lake = {};
 
     lake.whats = function(obj,further){
-        if(further!==true&&obj.nodeType==1) return "HTMLElement";
+        if(further!==true&&obj&&obj.nodeType==1) return "HTMLElement";
         else return Object.prototype.toString.call(obj).replace(/[\[\]\s]|object/g,"")
     };
     lake.select = function(obj){
@@ -16,14 +16,11 @@
         }else if(/(window|document)/.test(obj)){
             return eval(obj)
         }else{
-            var objs,arr=[];
+            var objs;
             if(typeof(obj)=="string"){
                 objs=document.querySelectorAll(obj)
             }else if(this.whats(obj)=="HTMLCollection"||this.whats(obj)=="NodeList"){
                 objs=obj
-            }else if(this.whats(obj)=="Array"||this.whats(obj)=="Object"){
-                this.each(obj,function(ele){ele.nodeType==1&&arr.push(ele)});
-                objs = arr;
             }else{
                 console.error("Argument:"+obj+" can not be selected.");
                 return null;
@@ -48,13 +45,13 @@
                 }
             }else{
                 for (i = 0, j = obj.length; i < j; i++) {
-                    fn(obj[i], i)
+                    fn.call(obj[i],obj[i], i)
                 }
             }
         }else if(this.whats(obj)=="Object"){
             for(var k in obj){
                 if(obj.hasOwnProperty(k)){
-                    fn(obj[k],k)
+                    fn.call(obj[k],obj[k],k)
                 }
             }
         }else{console.error("Arg[0]:"+obj+" can not be traversed.")}
@@ -106,7 +103,9 @@
                 output = {};
             if(fn && fn.nodeType) base = fn;
             function test(obj,selector){
-                if (/^\.\w+$/.test(selector)){
+                if(obj.nodeType && obj.nodeType == 9){
+                    return false
+                }else if (/^\.\w+$/.test(selector)){
                     return obj.classList.contains(selector.replace(/\./,""))
                 }else if (/^#\w+$/.test(selector)){
                     return obj.id == (selector.replace(/#/,""))
@@ -122,7 +121,8 @@
                 var target = element,
                     result = true,
                     str2 = (str1.replace(/\s*([>\+~])\s*/g,"$1")).match(/\S+/g),
-                    i = str2.length;
+                    len = str2.length,
+                    i = len;
                 while(i--){
                     var _target = target,
                         str3 = str2[i].match(/[>\+~]|[#.]?\w+(?::\S+|\[\S+])?/g),
@@ -132,8 +132,13 @@
                         if(/^[\.#]?\w+(?::\S+|\[\S+])?$/.test(str4)){
                             if(_target.nodeType){
                                 if(!test(_target,str4)){
-                                    result = false;
-                                    break;
+                                    if(i < len-1 && _target !== base){
+                                        _target = _target.parentNode;
+                                        j++;
+                                    }else{
+                                        result = false;
+                                        break;
+                                    }
                                 }
                             }else if(_target.length){
                                 result = false;
@@ -144,7 +149,6 @@
                                         break;
                                     }
                                 }
-                                break;
                             }
                         }else if(/^>$/.test(str4)){
                             _target = _target.parentNode
@@ -160,15 +164,15 @@
                             _target = prevs
                         }
                     }
-                    if (!result || target === base){
+                    if (!result || _target === base){
                         break;
                     }else{
-                        target = target.parentNode
+                        _target = _target.parentNode
                     }
                 }
                 output[str1] = result;
                 if (fn && typeof fn == "function"){
-                    fn(result,str1)
+                    fn.call(target,result,str1)
                 }
             });
             return output;
@@ -180,20 +184,20 @@
         var t = this.select(target);
         if(t.length){
             this.each(t, function (ele){
-                ele.addEventListener(event, fn, capture===true)
+                ele.addEventListener(event,fn,capture===true)
             })
         }else{
-            t.addEventListener(event, fn, capture===true)
+            t.addEventListener(event,fn,capture===true)
         }
     };
-    lake.deaf = function(target,event,fn){
+    lake.deaf = function(target,event,fn,capture){
         var t = this.select(target);
         if(t.length){
             this.each(t, function (ele){
-                ele.removeEventListener(event, fn)
+                ele.removeEventListener(event,fn,capture===true)
             })
         }else{
-            t.removeEventListener(event, fn)
+            t.removeEventListener(event,fn,capture===true)
         }
     };
 
@@ -305,8 +309,8 @@
 
     var _mo = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
     _mo.prototype.add = function (obj, config) {
-        var target = lake.select(obj);
-        var cfg = config ? config : {
+        var _this = this,target = lake.select(obj);
+        var cfg, pars = {
             attributes: false,
             childList: true,
             characterData: false,
@@ -314,35 +318,45 @@
             attributeOldValue: false,
             characterDataOldValue: false /*,attributeFilter:undefined*/
         };
-        var __this = this;
-        if (!__this.objs) __this.objs = [];
+        if(lake.whats(config) == "Object"){
+            cfg = config;
+        }
+        if (!this.objs) this.objs = [];
         if (target.length) {
-            lake.each(target, function (ele) {
-                __this.observe(ele, cfg);
-                __this.objs.indexOf(ele) < 0 && lake.objs.push(ele);
-            })
+            lake.each(target, function (ele) {on(ele)})
         }else{
-            __this.observe(target, cfg);
-            __this.objs.indexOf(target) < 0 && __this.objs.push(target);
+            on(target)
+        }
+        function on(element) {
+            if(cfg){
+                _this.observe(element,cfg);
+                element._mo_cfg = cfg;
+            }else if(element._mo_cfg){
+                _this.observe(element,element._mo_cfg);
+            }else{
+                _this.observe(element,pars);
+                element._mo_cfg = pars;
+            }
+            _this.objs.indexOf(element) < 0 && _this.objs.push(element);
         }
     };
     _mo.prototype.del = function (obj) {
         this.disconnect();
         if (obj && this.objs) {
             var target = lake.select(obj);
-            var __this = this;
+            var _this = this;
             if (target.length) {
-                lake.each(target, function (ele) {
-                    __this.objs = __this.objs.filter(function (o) {
-                        return o !== ele
-                    });
-                })
+                lake.each(target, function (ele) {off(ele)})
             }else{
-                __this.objs = __this.objs.filter(function (o) {
-                    return o !== target
-                });
+                off(target)
             }
-            __this.objs.length > 0 && __this.on(__this.objs);
+            function off(element) {
+                element._mo_cfg && delete element._mo_cfg;
+                _this.objs = _this.objs.filter(function (o) {
+                    return o !== element
+                })
+            }
+            _this.objs.length > 0 && _this.add(_this.objs);
         }
     };
     lake.mutation = function(fn){
@@ -352,100 +366,106 @@
     //Listener
     //Lake 20160301
 
-    var _listener = function(selector,event,fn,capture){
-        var __this = this;
-        __this.base = typeof selector == "string"?selector.trim().replace(/\s+/g," ").replace(/\s*([>\+~])\s*/g,"$1"):selector;
-        __this.event = {};
-        __this.target = {};
-        __this.main = function(e){
-            var ___this = this;
-            if(JSON.stringify(__this.event) != "{}"){
-                if(__this.event[e.type].length > 0) lake.each(__this.event[e.type],function(f){f(e)})
+    var _listener = function(selector,basement){
+        var _this = this;
+        this.listener = typeof selector == "string"?selector.trim().replace(/\s+/g," ").replace(/\s*([>\+~])\s*/g,"$1"):selector;
+        this.basement = basement;
+        this.event = {};
+        this.target = {};
+        this.main = function(e){
+            _this.processor.call(this,e,_this)
+        };
+    };
+    _listener.prototype = {
+        processor:function (e,listener) {
+            var _this = this,
+                base = listener.basement === true ? _this : listener.basement.nodeType ? listener.basement : undefined;
+            if(JSON.stringify(listener.event) != "{}"){
+                if(listener.event[e.type].length > 0) lake.each(listener.event[e.type],function(f){f.call(e.target,e)})
             }
-            if(JSON.stringify(__this.target) != "{}"){
-                if (__this.target[e.type]){
-                    lake.each(__this.target[e.type],function(ele,key){
+            if(JSON.stringify(listener.target) != "{}"){
+                if (listener.target[e.type]){
+                    lake.each(listener.target[e.type],function(ele,key){
                         if (ele.length > 0){
                             lake.match(e.target, key, function (result) {
-                                result && lake.each(ele, function (f){f(e)})
-                            }, ___this)
+                                result && lake.each(ele, function (f){f.call(e.target,e)})
+                            }, base)
                         }
                     })
                 }
             }
-        };
-        if(event && fn) {
-            __this.event[event] = [fn];
-            lake.listen(__this.base,event,__this.main,capture);
-        }
-    };
-    _listener.prototype = {
+        },
         add:function(target,event,fn,capture){
-            if(typeof target == "string" && typeof event == "string" && typeof fn == "function"){
+            if(typeof fn == "boolean"){
+                capture = fn;
+                fn = undefined;
+            }
+            if(typeof target == "string" && typeof event == "function"){
+                fn = event;
+                event = target;
+                target = undefined;
+            }
+            if(typeof target == "string" && typeof event == "string"){
                 if(!document.querySelector(target)){
                     console.error("Arg[0]:target must be an available selector string.");
                     return;
-                }
-                target = target.trim().replace(/\s+/g," ").replace(/\s*([>+~])\s*/g,"$1");
-            }else if(typeof target == "string" && typeof event == "function"){
-                capture = fn; fn = event; event = target;target = undefined
-            }else{
-                console.error("Arguments must be like : (target,event,fn[,capture]) or (event,fn[,capture])");
-                return;
-            }
-            var __this = this;
-            if (!__this.event[event]){
-                __this.event[event] = [];
-                lake.listen(__this.base,event,__this.main,capture);
-            }
-            if(target && target !== __this.base) {
-                if (!__this.target[event]) {
-                    __this.target[event] = {};
-                    __this.target[event][target] = [fn];
-                }else if (!__this.target[event][target]){
-                    __this.target[event][target] = [fn]
                 }else{
-                    __this.target[event][target].indexOf(fn) < 0 && __this.target[event][target].push(fn)
+                    target = target.trim().replace(/\s+/g," ").replace(/\s*([>+~])\s*/g,"$1");
                 }
-            }else if(!target || target === __this.base){
-                __this.event[event].indexOf(fn) < 0 && __this.event[event].push(fn)
+            }
+            var _this = this;
+            if (!_this.event[event]){
+                _this.event[event] = [];
+                lake.listen(_this.listener,event,_this.main,capture);
+            }
+            if(target && target !== _this.listener) {
+                if (!_this.target[event]) {
+                    _this.target[event] = {};
+                    _this.target[event][target] = [fn];
+                }else if (!_this.target[event][target]){
+                    _this.target[event][target] = [fn]
+                }else{
+                    _this.target[event][target].indexOf(fn) < 0 && _this.target[event][target].push(fn)
+                }
+            }else if(!target || target === _this.listener){
+                _this.event[event].indexOf(fn) < 0 && _this.event[event].push(fn)
             }
         },
-        del:function(target,event,fn){
-            var __this = this, fns, index;
+        del:function(target,event,fn,capture){
+            var _this = this, fns, index;
             if(!target){
-                lake.each(__this.event,function(e,key){
-                    lake.deaf(__this.base,key,__this.main);
-                    delete __this.event[key];
-                    delete __this.target[key];
+                lake.each(_this.event,function(e,key){
+                    lake.deaf(_this.listener,key,_this.main,capture);
+                    delete _this.event[key];
+                    delete _this.target[key];
                 })
             }else if(typeof target == "string" && !!document.querySelector(target)){
                 if(typeof event == "string" && typeof fn == "function"){
-                    fns = __this.target[event][target];
+                    fns = _this.target[event][target];
                     index = fns.indexOf(fn);
                     index > -1 && fns.splice(index,1);
                 }else if(typeof event == "string" && !fn){
-                    delete __this.target[event][target]
+                    delete _this.target[event][target]
                 }else if(!event){
-                    lake.each(__this.target,function(event){
+                    lake.each(_this.target,function(event){
                         event[target] && delete event[target]
                     })
                 }
             }else if(typeof target == "string"){
                 if(typeof event == "function"){
-                    fns = __this.event[target];
+                    fns = _this.event[target];
                     index = fns.indexOf(event);
                     index > -1 && fns.splice(index,1);
                 }else if(!event){
-                    __this.event[target].splice(0)
+                    _this.event[target].splice(0)
                 }
             }else{
                 console.error("Arguments must be like: (target,event,fn) or (target,event) or (target) to delete child event. (event,fn) or (event) to delete self event.")
             }
         }
     };
-    lake.listener = function(selector,event,fn,capture){
-        return new _listener(selector,event,fn,capture)
+    lake.listener = function(selector,basement){
+        return new _listener(selector,basement)
     };
 
 })();
