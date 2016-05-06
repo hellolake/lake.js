@@ -424,7 +424,7 @@ var bmap_ak = {
 		}
 
 		if(typeof location == "string"){
-			var _this = this,search = new BMap.LocalSearch("全国");
+			var _this = this,search = new BMap.LocalSearch("ȫ��");
 			map.addEventListener("moving",function(){_this.count>1&&map.dispatchEvent("onloadcode")});
 			search.setSearchCompleteCallback(function(r){
 				if(search.getStatus() !== 0){
