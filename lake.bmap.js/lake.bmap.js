@@ -1,5 +1,5 @@
 // Lake 20160503
-// https://hellolake.duapp.com
+// http://hellolake.duapp.com/
 // https://github.com/hellolake/lake.js
 
 var bmap_ak = {
