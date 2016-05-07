@@ -1,17 +1,17 @@
 ## HOME
 Simple Function Lake. <br>
 简易方法集/函数湖. <br><br>
-http://hellolake.github.io <br>
-https://hellolake.duapp.com
+hellolake.github.io <br>
+hellolake.duapp.com
 
 ## lake.js
 
 DEMO & DOC <br>
-http://hellolake.github.io/lake.js/ <br>
-http://hellolake.duapp.com/lake.js/
+hellolake.github.io/lake.js/ <br>
+hellolake.duapp.com/lake.js/
 
 ## lake.bmap.js
 
 DEMO & DOC <br>
-http://hellolake.github.io/lake.bmap.js/ <br>
-http://hellolake.duapp.com/lake.bmap.js/
+hellolake.github.io/lake.bmap.js/ <br>
+hellolake.duapp.com/lake.bmap.js/
