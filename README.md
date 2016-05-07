@@ -4,11 +4,6 @@ Simple Function Lake. <br>
 http://hellolake.github.io <br>
 http://hellolake.duapp.com
 
-## lake.js
-
-DEMO & DOC <br>
-http://hellolake.github.io/lake.js/ <br>
-http://hellolake.duapp.com/lake.js/
 
 ## lake.bmap.js
 
