@@ -1,6 +1,5 @@
 ## HOME
-Simple Function Lake. <br>
-简易方法集/函数湖. <br><br>
+Simple Function Lake. <br><br>
 http://hellolake.github.io <br>
 http://hellolake.duapp.com
 
